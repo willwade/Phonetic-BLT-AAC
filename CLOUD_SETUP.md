@@ -1,72 +1,64 @@
 # Cloud GPU Training Setup
 
-This directory contains scripts for setting up Meta BLT training on a big fat machine. 
+Setup scripts for training BLT on a cloud GPU instance (A100, H200, etc.).
 
 ## Quick Start
 
-3. **Clone the repository:**
-   ```bash
-   git clone https://github.com/willwade/Phonetic-BLT-AAC.git
-   cd Phonetic-BLT-AAC
-   ```
+```bash
+# 1. Clone
+git clone https://github.com/willwade/Phonetic-BLT-AAC.git
+cd Phonetic-BLT-AAC
 
-4. **Run the setup script:**
-   ```bash
-   chmod +x cloud_setup.sh
-   ./cloud_setup.sh
-   ```
+# 2. Run setup (installs uv, dependencies, CUDA PyTorch)
+chmod +x cloud_setup.sh
+./cloud_setup.sh
 
-5. **Configure your HF token:**
-   ```bash
-   chmod +x cloud_data_setup.sh
-   ./cloud_data_setup.sh
-   # Edit .env and add your HF_TOKEN
-   nano .env
-   ```
+# 3. Upload or generate training data
+chmod +x cloud_data_setup.sh
+./cloud_data_setup.sh
 
-6. **Upload your training data** to `data/phonemized.txt`
+# 4. Smoke test (verifies model loads, ~9 GB download)
+uv run python test_blt_load.py
 
-7. **Start training:**
-   ```bash
-   python -m model.train --config model/blt_configs/meta_blt.yaml
-   ```
+# 5. Train
+uv run model/train.py --config model/blt_configs/meta_blt.yaml
+```
 
 ## Requirements
 
-- **GPU**: NVIDIA GPU with ≥16GB VRAM (24GB+ recommended)
+- **GPU**: NVIDIA GPU with **40+ GB VRAM** (A100 80GB recommended)
 - **CUDA**: CUDA 12.4+ compatible drivers
-- **Python**: Python 3.12+ (will be installed by setup)
-- **Storage**: ~50GB free space for data, checkpoints, and logs
-- **HF Token**: Valid HuggingFace token with BLT-1B access
+- **Python**: 3.12+
+- **Storage**: ~50 GB (model weights ~9 GB, data + checkpoints ~40 GB)
+- **No HF token needed** — model weights (`itazap/blt-1b-hf`) are public
 
 ## What the Scripts Do
 
 ### `cloud_setup.sh`
 - Detects and verifies GPU
 - Installs UV package manager
-- Installs project dependencies
-- Installs GPU-enabled PyTorch
-- Verifies CUDA support
+- Installs project dependencies via `uv sync`
+- Installs CUDA-enabled PyTorch
+- Verifies CUDA is working
+- Checks model wrapper imports correctly
 
 ### `cloud_data_setup.sh`
-- Creates `.env` file template
-- Sets up directories
-- Checks for training data
-- Validates HF token configuration
+- Creates `data/` and `checkpoints/` directories
+- Checks if training data exists
+- Shows how to generate data if missing
 
-## Monitoring Training
-
-While training is running, monitor GPU usage:
+## Monitoring
 
 ```bash
-watch -n 1 nvidia-smi
+watch -n 1 nvidia-smi    # GPU usage
 ```
 
 ## Troubleshooting
 
-**Out of Memory**: Reduce batch size in `model/blt_configs/meta_blt.yaml`
+**Out of Memory**: Reduce `batch_size` in `model/blt_configs/meta_blt.yaml` (try 4 or 2)
 
-**HF Token Issues**: Ensure token has access to `facebook/blt-1b`
+**CUDA not available**: Check `nvidia-smi` shows the GPU, verify driver supports CUDA 12.4+
 
-**Data Issues**: Verify `data/phonemized.txt` exists and contains phonemized text
+**Model download slow**: `itazap/blt-1b-hf` is ~9 GB. First run downloads it, subsequent runs use cache.
 
+**Data Issues**: Verify `data/phonemized.txt` exists and contains one phonemized sequence per line

@@ -1,57 +1,37 @@
 #!/bin/bash
-# Data and Environment Setup for Cloud Training
-# Handles data transfer and environment configuration
+# Data setup for cloud training
+# Checks training data exists and creates directories
 
 set -e
 
-echo "=== Data and Environment Setup ==="
+echo "=== Data Setup ==="
 
-# Check if .env file exists
-if [ ! -f .env ]; then
-    echo "Creating .env file template..."
-    cat > .env << 'EOF'
-# Hugging Face authentication token
-# Request access at: https://huggingface.co/facebook/blt-1b
-# Then add your token below:
-HF_TOKEN=your_token_here
-EOF
-    echo "[WARNING] .env file created - please edit it and add your HF_TOKEN"
-    echo "   Get your token from: https://huggingface.co/settings/tokens"
-    echo "   Request access at: https://huggingface.co/facebook/blt-1b"
-else
-    echo "[OK] .env file exists"
-fi
-
-# Create necessary directories
+# Create directories
 echo "Creating directories..."
 mkdir -p data checkpoints/meta_blt
 
-# Check if training data exists
+# Check training data
 if [ ! -f data/phonemized.txt ]; then
-    echo "[WARNING] Training data not found at data/phonemized.txt"
-    echo "   Please upload your phonemized training data"
-    echo "   Or run the data pipeline: uv run data/download.py && uv run data/phonemize.py"
+    echo ""
+    echo "[WARNING] No training data at data/phonemized.txt"
+    echo ""
+    echo "Option A: Upload pre-generated data"
+    echo "  scp phonemized.txt <instance>:/path/to/Phonetic-BLT-AAC/data/"
+    echo ""
+    echo "Option B: Generate on this instance"
+    echo "  uv run data/download.py --threshold 0.85"
+    echo "  uv run data/phonemize.py --input data/raw_conversations.txt --output data/phonemized.txt"
+    echo ""
+    echo "For a quick test, use the high-density subset:"
+    echo "  uv run data/download.py --output data/raw_conversations.txt"
+    echo "  (then phonemize as above)"
 else
     LINES=$(wc -l < data/phonemized.txt)
-    echo "[OK] Training data found: $LINES lines"
+    SIZE=$(du -h data/phonemized.txt | cut -f1)
+    echo "[OK] Training data: $LINES lines, $SIZE"
 fi
 
-# Test the setup
 echo ""
-echo "Testing setup..."
-python -c "
-import os
-from dotenv import load_dotenv
-load_dotenv()
-hf_token = os.getenv('HF_TOKEN')
-if hf_token and hf_token != 'your_token_here':
-    print('[OK] HF_TOKEN is configured')
-else:
-    print('[ERROR] HF_TOKEN not set - please edit .env file')
-    exit(1)
-"
-
-echo ""
-echo "=== Data Setup Complete ==="
-echo "Ready for training! Run:"
-echo "  python -m model.train --config model/blt_configs/meta_blt.yaml"
+echo "=== Ready ==="
+echo "Start training with:"
+echo "  uv run model/train.py --config model/blt_configs/meta_blt.yaml"
