@@ -68,7 +68,7 @@ class TrainingMonitor:
             return []
 
         metrics = []
-        with open(self.metrics_file, "r") as f:
+        with open(self.metrics_file) as f:
             for line in f:
                 metrics.append(json.loads(line))
 
@@ -82,7 +82,7 @@ class TrainingMonitor:
             return
 
         print("=== Recent Training Progress ===")
-        for i, m in enumerate(metrics[-5:], 1):
+        for _i, m in enumerate(metrics[-5:], 1):
             print(f"Step {m['step']} (Epoch {m['epoch']}):")
             print(f"  Loss: {m['loss']:.4f}")
             print(f"  Perplexity: {m['perplexity']:.2f}")

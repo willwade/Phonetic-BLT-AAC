@@ -148,8 +148,8 @@ class TestTrainValTestSplit:
         train, val, test = train_val_test_split(lines)
 
         assert len(train) == 90  # 90%
-        assert len(val) == 5    # 5%
-        assert len(test) == 5   # 5%
+        assert len(val) == 5  # 5%
+        assert len(test) == 5  # 5%
 
     def test_split_custom_fractions(self):
         """Test custom split fractions."""
@@ -159,8 +159,8 @@ class TestTrainValTestSplit:
         train, val, test = train_val_test_split(lines, train_frac=0.8, val_frac=0.1)
 
         assert len(train) == 80  # 80%
-        assert len(val) == 10    # 10%
-        assert len(test) == 10   # 10%
+        assert len(val) == 10  # 10%
+        assert len(test) == 10  # 10%
 
     def test_split_small_dataset(self):
         """Test split with small dataset."""
@@ -206,7 +206,9 @@ class TestParallelPhonemize:
         from data.phonemize import parallel_phonemize
 
         # Create temporary input file
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as inp:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as inp:
             inp.write("hello world\n")
             inp.write("goodbye world\n")
             inp.write("testing phonemization\n")
@@ -218,7 +220,9 @@ class TestParallelPhonemize:
 
         try:
             # Run phonemization
-            parallel_phonemize(input_path, output_path, chunk_size=2, max_workers=1, verify_ascii=False)
+            parallel_phonemize(
+                input_path, output_path, chunk_size=2, max_workers=1, verify_ascii=False
+            )
 
             # Check output exists and has content
             assert Path(output_path).exists()
@@ -240,7 +244,9 @@ class TestParallelPhonemize:
         from data.phonemize import parallel_phonemize
 
         # Create temporary input file
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as inp:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as inp:
             inp.write("hello world\n")
             input_path = inp.name
 
@@ -248,7 +254,9 @@ class TestParallelPhonemize:
         output_path = Path(tempfile.gettempdir()) / "test_phonemize_subdir" / "output.txt"
 
         try:
-            parallel_phonemize(input_path, str(output_path), chunk_size=10, max_workers=1, verify_ascii=False)
+            parallel_phonemize(
+                input_path, str(output_path), chunk_size=10, max_workers=1, verify_ascii=False
+            )
 
             # Check output exists
             assert output_path.exists()
@@ -265,14 +273,18 @@ class TestParallelPhonemize:
         from data.phonemize import parallel_phonemize
 
         # Create empty temporary file
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as inp:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as inp:
             input_path = inp.name
 
         with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as out:
             output_path = out.name
 
         try:
-            parallel_phonemize(input_path, output_path, chunk_size=10, max_workers=1, verify_ascii=False)
+            parallel_phonemize(
+                input_path, output_path, chunk_size=10, max_workers=1, verify_ascii=False
+            )
 
             # Output should exist but be empty
             assert Path(output_path).exists()
@@ -289,7 +301,9 @@ class TestParallelPhonemize:
         from data.phonemize import parallel_phonemize
 
         # Create temporary input file
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as inp:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as inp:
             inp.write("hello world\n")
             input_path = inp.name
 
@@ -297,8 +311,14 @@ class TestParallelPhonemize:
             output_path = out.name
 
         try:
-            parallel_phonemize(input_path, output_path, chunk_size=10, max_workers=1,
-                              verify_ascii=False, output_bytes=True)
+            parallel_phonemize(
+                input_path,
+                output_path,
+                chunk_size=10,
+                max_workers=1,
+                verify_ascii=False,
+                output_bytes=True,
+            )
 
             # Check output exists and is bytes
             assert Path(output_path).exists()

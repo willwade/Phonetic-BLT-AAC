@@ -2,12 +2,10 @@
 
 import argparse
 import hashlib
-import time
 from pathlib import Path
 
 from datasets import load_dataset
 from tqdm import tqdm
-
 
 DATASET_SOURCES = {
     "c4": "figmtu/aac_c4_deberta_classified",  # 4.35B tokens
@@ -38,7 +36,9 @@ def download_aac_data(
         Number of lines written to output file
     """
     if source not in DATASET_SOURCES:
-        raise ValueError(f"Invalid source: {source}. Must be one of {list(DATASET_SOURCES.keys())}")
+        raise ValueError(
+            f"Invalid source: {source}. Must be one of {list(DATASET_SOURCES.keys())}"
+        )
 
     dataset_name = DATASET_SOURCES[source]
     print(f"Downloading {dataset_name} (threshold: {score_threshold})...")
@@ -82,7 +82,6 @@ def download_aac_data(
             score = example.get("dialogue_prob", 0.0)
             if score < score_threshold:
                 continue
-
 
             # Check for duplicates
             if deduplicate:

@@ -1,6 +1,7 @@
 """Quick test of Meta BLT model loading."""
 
 from dotenv import load_dotenv
+
 from model.blt_transformers import MetaBLTWrapper
 
 # Load environment variables
@@ -18,6 +19,7 @@ try:
 
     # Try a simple forward pass
     import torch
+
     dummy_input = torch.randint(0, 256, (1, 32))  # Batch size 1, sequence length 32
     print(f"Testing forward pass with input shape: {dummy_input.shape}")
 
@@ -36,5 +38,6 @@ try:
 except Exception as e:
     print(f"Error: {e}")
     import traceback
+
     traceback.print_exc()
     print("Note: Make sure HF_TOKEN is set in .env file and you have approved access")

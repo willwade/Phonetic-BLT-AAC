@@ -1,7 +1,5 @@
 """Test ONNX export functionality with Meta BLT."""
 
-from export.export_onnx import export_to_onnx
-
 
 def test_onnx_export():
     """Test ONNX export with Meta BLT (model loading only)."""
@@ -10,6 +8,7 @@ def test_onnx_export():
     print("1. Testing model loading for export...")
     try:
         from model.blt_transformers import MetaBLTWrapper
+
         blt_wrapper = MetaBLTWrapper()
         model = blt_wrapper.load_model()
         print("   [OK] Meta BLT model loaded successfully")
@@ -20,22 +19,34 @@ def test_onnx_export():
 
     print("\n2. Testing ONNX export dependencies...")
     try:
-        import torch.onnx
-        print("   [OK] torch.onnx available")
+        import importlib.util
+
+        if importlib.util.find_spec("torch.onnx"):
+            print("   [OK] torch.onnx available")
+        else:
+            raise ImportError
     except ImportError:
         print("   [ERROR] torch.onnx not available")
         return
 
     try:
-        import onnx
-        print("   [OK] onnx available")
+        import importlib.util
+
+        if importlib.util.find_spec("onnx"):
+            print("   [OK] onnx available")
+        else:
+            raise ImportError
     except ImportError:
         print("   [ERROR] onnx not available")
         return
 
     try:
-        from onnxruntime.quantization import quantize_dynamic
-        print("   [OK] onnxruntime.quantization available")
+        import importlib.util
+
+        if importlib.util.find_spec("onnxruntime.quantization"):
+            print("   [OK] onnxruntime.quantization available")
+        else:
+            raise ImportError
     except ImportError:
         print("   [WARNING] onnxruntime not available - quantization will be skipped")
 

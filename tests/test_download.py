@@ -31,7 +31,9 @@ class TestDownloadAndFilter:
         mock_path_instance.open.return_value.__exit__ = MagicMock(return_value=False)
         mock_path.return_value = mock_path_instance
 
-        download_and_filter(score_threshold=0.85, output_path="test.txt", resume=False, deduplicate=False)
+        download_and_filter(
+            score_threshold=0.85, output_path="test.txt", resume=False, deduplicate=False
+        )
 
         # Should write only 2 lines (0.9 and 0.85)
         assert mock_file.write.call_count == 2
@@ -56,7 +58,9 @@ class TestDownloadAndFilter:
         mock_path_instance.open.return_value.__exit__ = MagicMock(return_value=False)
         mock_path.return_value = mock_path_instance
 
-        download_and_filter(score_threshold=0.5, output_path="test.txt", resume=False, deduplicate=False)
+        download_and_filter(
+            score_threshold=0.5, output_path="test.txt", resume=False, deduplicate=False
+        )
 
         # Should write only 1 line (missing score defaults to 0.0, below threshold)
         assert mock_file.write.call_count == 1
@@ -80,7 +84,9 @@ class TestDownloadAndFilter:
         mock_path_instance.open.return_value.__exit__ = MagicMock(return_value=False)
         mock_path.return_value = mock_path_instance
 
-        download_and_filter(score_threshold=0.85, output_path="test.txt", resume=False, deduplicate=False)
+        download_and_filter(
+            score_threshold=0.85, output_path="test.txt", resume=False, deduplicate=False
+        )
 
         # Check that internal newlines are replaced with spaces and text is stripped
         written_arg = mock_file.write.call_args[0][0]
@@ -109,11 +115,15 @@ class TestDownloadAndFilter:
         mock_path_instance.open.return_value.__exit__ = MagicMock(return_value=False)
 
         # Mock the line counting
-        mock_path_instance.open.return_value.__iter__ = MagicMock(return_value=iter(["existing line\n"]))
+        mock_path_instance.open.return_value.__iter__ = MagicMock(
+            return_value=iter(["existing line\n"])
+        )
 
         mock_path.return_value = mock_path_instance
 
-        download_and_filter(score_threshold=0.85, output_path="test.txt", resume=True, deduplicate=False)
+        download_and_filter(
+            score_threshold=0.85, output_path="test.txt", resume=True, deduplicate=False
+        )
 
         # Should skip 1 line and write 2 lines
         assert mock_file.write.call_count == 2
@@ -139,7 +149,9 @@ class TestDownloadAndFilter:
         mock_path_instance.open.return_value.__exit__ = MagicMock(return_value=False)
         mock_path.return_value = mock_path_instance
 
-        download_and_filter(score_threshold=0.85, output_path="test.txt", resume=False, deduplicate=True)
+        download_and_filter(
+            score_threshold=0.85, output_path="test.txt", resume=False, deduplicate=True
+        )
 
         # Should write only 2 unique lines
         assert mock_file.write.call_count == 2

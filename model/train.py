@@ -22,6 +22,7 @@ from torch.utils.data import DataLoader
 
 try:
     from torch.utils.tensorboard import SummaryWriter
+
     TENSORBOARD_AVAILABLE = True
 except ImportError:
     TENSORBOARD_AVAILABLE = False
@@ -79,7 +80,7 @@ def train_one_epoch(
         if scaler is not None:
             with autocast():
                 outputs = model(inputs)
-                logits = outputs.logits if hasattr(outputs, 'logits') else outputs
+                logits = outputs.logits if hasattr(outputs, "logits") else outputs
                 mask = targets != PAD_TOKEN
                 loss = criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
                 loss = (loss * mask.view(-1).float()).sum() / mask.sum()
@@ -92,7 +93,7 @@ def train_one_epoch(
             scaler.update()
         else:
             outputs = model(inputs)
-            logits = outputs.logits if hasattr(outputs, 'logits') else outputs
+            logits = outputs.logits if hasattr(outputs, "logits") else outputs
             mask = targets != PAD_TOKEN
             loss = criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
             loss = (loss * mask.view(-1).float()).sum() / mask.sum()
@@ -128,7 +129,7 @@ def validate(
     loader: DataLoader,
     criterion: nn.Module,
     device: torch.device,
-    desc: str = "Validation"
+    desc: str = "Validation",
 ) -> tuple[float, float]:
     """Run validation and return loss and perplexity.
 
@@ -151,7 +152,7 @@ def validate(
         for inputs, targets in loader:
             inputs, targets = inputs.to(device), targets.to(device)
             outputs = model(inputs)
-            logits = outputs.logits if hasattr(outputs, 'logits') else outputs
+            logits = outputs.logits if hasattr(outputs, "logits") else outputs
 
             mask = targets != PAD_TOKEN
             loss = criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
@@ -199,13 +200,13 @@ def main(config_path: str, resume_from: str | None = None):
         print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
         print(f"Vocabulary size: {model_info.vocab_size}")
         # Handle different config attributes between BLT versions
-        if hasattr(model_info, 'num_hidden_layers'):
+        if hasattr(model_info, "num_hidden_layers"):
             print(f"Number of layers: {model_info.num_hidden_layers}")
-        if hasattr(model_info, 'num_attention_heads'):
+        if hasattr(model_info, "num_attention_heads"):
             print(f"Number of heads: {model_info.num_attention_heads}")
-        if hasattr(model_info, 'hidden_size'):
+        if hasattr(model_info, "hidden_size"):
             print(f"Hidden size: {model_info.hidden_size}")
-        if hasattr(model_info, 'max_position_embeddings'):
+        if hasattr(model_info, "max_position_embeddings"):
             print(f"Max sequence length: {model_info.max_position_embeddings}")
 
     except Exception as e:
@@ -279,6 +280,7 @@ def main(config_path: str, resume_from: str | None = None):
 
     # Training monitor
     from model.monitor import TrainingMonitor, get_gpu_memory
+
     monitor = TrainingMonitor(log_dir if TENSORBOARD_AVAILABLE else Path("logs"))
     print("Training monitor initialized")
 
@@ -306,8 +308,15 @@ def main(config_path: str, resume_from: str | None = None):
 
         # Training
         train_loss = train_one_epoch(
-            model, train_loader, optimizer, criterion, device,
-            scaler=scaler, grad_clip=grad_clip, epoch=epoch, writer=writer
+            model,
+            train_loader,
+            optimizer,
+            criterion,
+            device,
+            scaler=scaler,
+            grad_clip=grad_clip,
+            epoch=epoch,
+            writer=writer,
         )
         print(f"  Training loss: {train_loss:.4f}")
 
@@ -334,7 +343,7 @@ def main(config_path: str, resume_from: str | None = None):
             perplexity=val_perplexity,
             learning_rate=optimizer.param_groups[0]["lr"],
             gpu_memory=gpu_memory,
-            phase="validation"
+            phase="validation",
         )
 
         # Checkpoint saving
@@ -345,14 +354,17 @@ def main(config_path: str, resume_from: str | None = None):
         if val_perplexity < best_perplexity:
             best_perplexity = val_perplexity
             save_path = save_dir / "best.pt"
-            torch.save({
-                "epoch": epoch,
-                "model_state_dict": model.state_dict(),
-                "optimizer_state_dict": optimizer.state_dict(),
-                "scheduler_state_dict": scheduler.state_dict() if scheduler else None,
-                "best_perplexity": best_perplexity,
-                "config": config,
-            }, save_path)
+            torch.save(
+                {
+                    "epoch": epoch,
+                    "model_state_dict": model.state_dict(),
+                    "optimizer_state_dict": optimizer.state_dict(),
+                    "scheduler_state_dict": scheduler.state_dict() if scheduler else None,
+                    "best_perplexity": best_perplexity,
+                    "config": config,
+                },
+                save_path,
+            )
             print(f"  [NEW] New best model saved (perplexity: {best_perplexity:.2f})")
 
             # Log checkpoint info
@@ -360,7 +372,7 @@ def main(config_path: str, resume_from: str | None = None):
                 epoch=epoch,
                 checkpoint_path=save_path,
                 perplexity=best_perplexity,
-                checkpoint_type="best"
+                checkpoint_type="best",
             )
             patience_counter = 0
         else:
@@ -368,14 +380,17 @@ def main(config_path: str, resume_from: str | None = None):
 
         # Save latest checkpoint
         latest_path = save_dir / "latest.pt"
-        torch.save({
-            "epoch": epoch,
-            "model_state_dict": model.state_dict(),
-            "optimizer_state_dict": optimizer.state_dict(),
-            "scheduler_state_dict": scheduler.state_dict() if scheduler else None,
-            "best_perplexity": best_perplexity,
-            "config": config,
-        }, latest_path)
+        torch.save(
+            {
+                "epoch": epoch,
+                "model_state_dict": model.state_dict(),
+                "optimizer_state_dict": optimizer.state_dict(),
+                "scheduler_state_dict": scheduler.state_dict() if scheduler else None,
+                "best_perplexity": best_perplexity,
+                "config": config,
+            },
+            latest_path,
+        )
 
         # Early stopping
         if patience_counter >= patience:

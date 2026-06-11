@@ -86,7 +86,9 @@ def parallel_phonemize(
         results = list(executor.map(_process_chunk, chunks))
 
     # Aggregate results and stats
-    with output_file.open("w" if not output_bytes else "wb", encoding=None if output_bytes else "utf-8") as out:
+    with output_file.open(
+        "w" if not output_bytes else "wb", encoding=None if output_bytes else "utf-8"
+    ) as out:
         for chunk_lines, chunk_stats in results:
             for line in chunk_lines:
                 if output_bytes:
@@ -104,9 +106,11 @@ def parallel_phonemize(
 
     logger.info(f"Parallel phonemization complete. Output: {output_path}")
     logger.info(f"Performance: {lines_per_sec:.1f} lines/second")
-    logger.info(f"Stats: {total_stats['total_words']} words, "
-                f"{total_stats['skipped_words']} skipped ({total_stats['skipped_words']/max(total_stats['total_words'],1)*100:.1f}%), "
-                f"{total_stats['skipped_lines']} empty lines")
+    logger.info(
+        f"Stats: {total_stats['total_words']} words, "
+        f"{total_stats['skipped_words']} skipped ({total_stats['skipped_words'] / max(total_stats['total_words'], 1) * 100:.1f}%), "
+        f"{total_stats['skipped_lines']} empty lines"
+    )
 
     if verify_ascii and not output_bytes:
         # Verify ASCII output
@@ -116,10 +120,14 @@ def parallel_phonemize(
                 if any(ord(char) > 127 for char in line):
                     non_ascii_count += 1
                     if non_ascii_count <= 5:  # Show first 5 examples
-                        logger.warning(f"Non-ASCII character found in line {line_num}: {line.strip()[:50]}...")
+                        logger.warning(
+                            f"Non-ASCII character found in line {line_num}: {line.strip()[:50]}..."
+                        )
 
         if non_ascii_count > 0:
-            logger.warning(f"Found {non_ascii_count} lines with non-ASCII characters (outside 0-127 range)")
+            logger.warning(
+                f"Found {non_ascii_count} lines with non-ASCII characters (outside 0-127 range)"
+            )
         else:
             logger.info("✓ All output verified as ASCII (0-127)")
 

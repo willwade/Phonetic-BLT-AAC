@@ -3,6 +3,7 @@
 from datasets import load_dataset
 from tqdm import tqdm
 
+
 def test_download():
     print("Testing download with debug output...")
 
@@ -24,18 +25,19 @@ def test_download():
         print(f"Row {count}: score={score:.4f}, text_len={len(text)}, text='{text[:50]}...'")
 
         if not text:
-            print(f"  -> Skipped: empty text")
+            print("  -> Skipped: empty text")
             continue
 
         if score < score_threshold:
             print(f"  -> Skipped: score {score:.4f} < {score_threshold}")
             continue
 
-        print(f"  -> ACCEPTED: writing to file")
+        print("  -> ACCEPTED: writing to file")
         count += 1
         pbar.update(1)
 
     print(f"\nDone: {count} lines would be written")
+
 
 if __name__ == "__main__":
     test_download()

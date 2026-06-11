@@ -5,12 +5,11 @@ Usage:
 """
 
 import argparse
-import tempfile
 
 import torch
 import torch.onnx
-
 from dotenv import load_dotenv
+
 from model.blt_transformers import MetaBLTWrapper
 
 # Load environment variables
@@ -82,8 +81,9 @@ def export_to_onnx(
     # Verify the exported model
     print("Verifying exported model...")
     import onnx
+
     onnx_model = onnx.load(onnx_output_path)
-    print(f"ONNX model loaded successfully")
+    print("ONNX model loaded successfully")
     print(f"Inputs: {[inp.name for inp in onnx_model.graph.input]}")
     print(f"Outputs: {[out.name for out in onnx_model.graph.output]}")
 
@@ -92,7 +92,7 @@ def export_to_onnx(
         quantized_path = onnx_output_path.replace(".onnx", "_int8.onnx")
 
         try:
-            from onnxruntime.quantization import quantize_dynamic, QuantType
+            from onnxruntime.quantization import QuantType, quantize_dynamic
 
             # Use dynamic quantization (works without calibration data)
             quantize_dynamic(
@@ -103,7 +103,7 @@ def export_to_onnx(
             print(f"Quantized model saved to: {quantized_path}")
 
             # Verify quantized model
-            quantized_onnx = onnx.load(quantized_path)
+            onnx.load(quantized_path)
             print("Quantized ONNX model loaded successfully")
             return quantized_path
 

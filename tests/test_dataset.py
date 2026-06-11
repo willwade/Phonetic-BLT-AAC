@@ -14,7 +14,9 @@ class TestByteSequenceDataset:
     def test_basic_creation(self):
         """Test basic dataset creation from small file."""
         # Create temporary file with sample data
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("hello world\n")
             f.write("goodbye world\n")
             f.write("testing phonemization\n")
@@ -30,7 +32,9 @@ class TestByteSequenceDataset:
 
     def test_empty_file(self):
         """Test that empty file produces 0 samples without error."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             data_path = f.name
 
         try:
@@ -42,7 +46,9 @@ class TestByteSequenceDataset:
 
     def test_whitespace_only_file(self):
         """Test file with only whitespace produces 0 samples."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("   \n")
             f.write("\n")
             f.write("  \n")
@@ -57,7 +63,9 @@ class TestByteSequenceDataset:
 
     def test_sequence_creation(self):
         """Test that sequences are created correctly from lines."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("abc\n")  # 3 bytes + EOS = 4 bytes
             data_path = f.name
 
@@ -74,7 +82,9 @@ class TestByteSequenceDataset:
 
     def test_sample_creation(self):
         """Test that samples are created correctly from sequences."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("abcdefghij\n")  # 10 bytes + EOS
             data_path = f.name
 
@@ -88,7 +98,9 @@ class TestByteSequenceDataset:
 
     def test_getitem_returns_tensors(self):
         """Test that __getitem__ returns torch tensors."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("hello world\n")
             data_path = f.name
 
@@ -106,7 +118,9 @@ class TestByteSequenceDataset:
 
     def test_input_target_shift(self):
         """Test that target is shifted by 1 from input."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("abc\n")  # Simple test case
             data_path = f.name
 
@@ -126,7 +140,9 @@ class TestByteSequenceDataset:
 
     def test_max_seq_len_respected(self):
         """Test that max_seq_len parameter is respected."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("a" * 20 + "\n")  # Long line
             data_path = f.name
 
@@ -145,7 +161,9 @@ class TestByteSequenceDataset:
 
     def test_stride_parameter(self):
         """Test that stride parameter affects sliding window."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("a" * 10 + "\n")
             data_path = f.name
 
@@ -162,9 +180,11 @@ class TestByteSequenceDataset:
 
     def test_short_sequences_filtered(self):
         """Test that sequences shorter than 2 bytes are filtered out."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("a\n")  # 1 byte + EOS = 2 bytes (should be kept)
-            f.write("\n")   # 0 bytes (should be filtered)
+            f.write("\n")  # 0 bytes (should be filtered)
             data_path = f.name
 
         try:
@@ -236,10 +256,7 @@ class TestCollateFn:
 
     def test_large_batch(self):
         """Test collate_fn with larger batch."""
-        batch = [
-            (torch.tensor([i]), torch.tensor([i + 1]))
-            for i in range(100)
-        ]
+        batch = [(torch.tensor([i]), torch.tensor([i + 1])) for i in range(100)]
 
         padded_inputs, padded_targets = collate_fn(batch)
 
@@ -270,7 +287,9 @@ class TestSpecialTokens:
 
     def test_eos_token_added_to_sequences(self):
         """Test that EOS_TOKEN is added to sequences."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("abc\n")
             data_path = f.name
 
@@ -290,7 +309,9 @@ class TestDatasetIntegration:
         """Test that dataset works with PyTorch DataLoader."""
         from torch.utils.data import DataLoader
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             for i in range(10):
                 f.write(f"sample line {i}\n")
             data_path = f.name
@@ -315,7 +336,9 @@ class TestDatasetIntegration:
 
     def test_padding_does_not_contaminate_targets(self):
         """Test that PAD_TOKEN does not appear in target values from actual data."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("hello world\n")
             f.write("test data\n")
             data_path = f.name
@@ -334,7 +357,9 @@ class TestDatasetIntegration:
 
     def test_repr_not_implemented(self):
         """Test that dataset currently lacks __repr__ (as per TODO)."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("test\n")
             data_path = f.name
 

@@ -29,7 +29,7 @@ def test_monitoring():
                     perplexity=perplexity,
                     learning_rate=lr,
                     gpu_memory=get_gpu_memory(),
-                    phase="train"
+                    phase="train",
                 )
 
         print("   Logged 12 simulated training steps")
@@ -47,7 +47,7 @@ def test_monitoring():
             epoch=3,
             checkpoint_path=Path("checkpoints/best.pt"),
             perplexity=95.5,
-            checkpoint_type="best"
+            checkpoint_type="best",
         )
 
         print("5. Testing format_time utility...")

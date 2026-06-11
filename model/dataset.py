@@ -46,9 +46,11 @@ class ByteSequenceDataset(Dataset):
 
     def __repr__(self) -> str:
         """Return string representation with dataset size and sequence count."""
-        return (f"ByteSequenceDataset(path={self.data_path.name}, "
-                f"sequences={len(self.sequences)}, samples={len(self.samples)}, "
-                f"max_seq_len={self.max_seq_len}, stride={self.stride})")
+        return (
+            f"ByteSequenceDataset(path={self.data_path.name}, "
+            f"sequences={len(self.sequences)}, samples={len(self.samples)}, "
+            f"max_seq_len={self.max_seq_len}, stride={self.stride})"
+        )
 
     def subset(self, n: int, seed: int | None = None) -> "ByteSequenceDataset":
         """Return a random subset of n samples for debugging.

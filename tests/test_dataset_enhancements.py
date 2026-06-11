@@ -13,7 +13,9 @@ class TestDatasetEnhancements:
 
     def test_repr_contains_info(self):
         """Test that __repr__ contains dataset information."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("hello world\n")
             f.write("test data\n")
             data_path = f.name
@@ -33,7 +35,9 @@ class TestDatasetEnhancements:
 
     def test_subset_smaller_than_original(self):
         """Test that subset returns smaller dataset."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             for i in range(10):
                 f.write(f"sample line {i}\n")
             data_path = f.name
@@ -51,7 +55,9 @@ class TestDatasetEnhancements:
 
     def test_subset_larger_than_original(self):
         """Test that subset with n larger than dataset returns all samples."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             for i in range(3):
                 f.write(f"sample line {i}\n")
             data_path = f.name
@@ -68,7 +74,9 @@ class TestDatasetEnhancements:
 
     def test_subset_reproducible_with_seed(self):
         """Test that subset with same seed produces same results."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             for i in range(20):
                 f.write(f"sample line {i}\n")
             data_path = f.name
@@ -91,7 +99,9 @@ class TestDatasetEnhancements:
 
     def test_subset_different_without_seed(self):
         """Test that subset without seed can produce different results."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             for i in range(20):
                 f.write(f"sample line {i}\n")
             data_path = f.name
@@ -111,7 +121,9 @@ class TestDatasetEnhancements:
 
     def test_verify_no_trivial_overlap(self):
         """Test overlap verification method."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             # Create lines that will generate overlapping samples with small stride
             f.write("a" * 20 + "\n")
             data_path = f.name
@@ -136,7 +148,9 @@ class TestDatasetEnhancements:
 
     def test_verify_no_trivial_overlap_large_stride(self):
         """Test that large stride produces fewer overlaps."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             # Use varied content to reduce structural overlap
             f.write("abcdefghijklmnopqrstuvwxyz\n")
             data_path = f.name
@@ -156,7 +170,9 @@ class TestDatasetEnhancements:
 
     def test_verify_no_trivial_overlap_small_stride(self):
         """Test that small stride produces more overlaps."""
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as f:
+        with tempfile.NamedTemporaryFile(
+            mode="w", delete=False, suffix=".txt", encoding="utf-8"
+        ) as f:
             f.write("a" * 50 + "\n")
             data_path = f.name
 

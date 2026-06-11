@@ -4,7 +4,6 @@ This validates that the environment is correctly set up with all required packag
 """
 
 
-
 def test_torch_import():
     """Test that PyTorch can be imported."""
     import torch
