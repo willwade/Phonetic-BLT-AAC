@@ -1608,6 +1608,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "tensorboard" },
     { name = "torch" },
+    { name = "tqdm" },
 ]
 
 [package.optional-dependencies]
@@ -1635,6 +1636,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.4.0" },
     { name = "tensorboard", specifier = ">=2.16.0" },
     { name = "torch", specifier = ">=2.2.0" },
+    { name = "tqdm", specifier = ">=4.66.0" },
     { name = "wandb", marker = "extra == 'wandb'", specifier = ">=0.16.0" },
 ]
 provides-extras = ["dev", "wandb"]

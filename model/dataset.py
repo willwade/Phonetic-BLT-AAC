@@ -71,6 +71,9 @@ def collate_fn(
     batch: list[tuple[torch.Tensor, torch.Tensor]],
 ) -> tuple[torch.Tensor, torch.Tensor]:
     """Pad variable-length sequences within a batch to equal length."""
+    if not batch:
+        return torch.zeros((0, 0), dtype=torch.long), torch.zeros((0, 0), dtype=torch.long)
+
     inputs, targets = zip(*batch, strict=True)
     max_len = max(t.shape[0] for t in inputs)
 

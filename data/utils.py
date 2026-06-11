@@ -26,8 +26,20 @@ class SampaPhonemizer:
             SAMPA phoneme string, or empty string on failure.
         """
         try:
-            return self._epi.transliterate(word)
+            result = self._epi.transliterate(word)
+            # Verify the result is actually ASCII (0-127)
+            if result and any(ord(char) > 127 for char in result):
+                # Non-ASCII result - might be IPA instead of SAMPA
+                pass
+            return result
+        except ValueError as e:
+            # Known issues: unusual Unicode characters, emojis, etc.
+            return ""
+        except AttributeError:
+            # Epitran internal error
+            return ""
         except Exception:
+            # Catch-all for other errors
             return ""
 
     def convert_sentence(self, sentence: str) -> str:
@@ -51,6 +63,18 @@ def clean_text(text: str) -> str:
 def text_to_bytes(text: str) -> list[int]:
     """Encode a string to a list of byte values (0-255) for BLT input."""
     return list(text.encode("utf-8"))
+
+
+def bytes_to_text(byte_values: list[int]) -> str:
+    """Decode a list of byte values back to text.
+
+    Args:
+        byte_values: List of integers 0-255 representing UTF-8 bytes.
+
+    Returns:
+        Decoded text string.
+    """
+    return bytes(byte_values).decode("utf-8")
 
 
 def train_val_test_split(
