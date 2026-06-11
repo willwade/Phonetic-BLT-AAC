@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project artifacts
+data/raw_conversations.txt
+data/phonemized.txt
+checkpoints/
+*.onnx
+*.pt

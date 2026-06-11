@@ -1,0 +1,68 @@
+[project]
+name = "phonetic-blt-aac"
+version = "0.1.0"
+description = "Phonetic language model for Dasher built on Meta's Byte Latent Transformer, trained on EMNLP 2025 AAC-scored conversational data"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.12"
+
+dependencies = [
+    "torch>=2.2.0",
+    "datasets>=2.18.0",
+    "huggingface_hub>=0.22.0",
+    "epitran>=1.24",
+    "pandas>=2.2.0",
+    "pyarrow>=15.0.0",
+    "pyyaml>=6.0",
+    "tensorboard>=2.16.0",
+    "onnx>=1.16.0",
+    "onnxruntime>=1.17.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.4.0",
+    "pytest>=8.0.0",
+    "mypy>=1.9.0",
+]
+wandb = [
+    "wandb>=0.16.0",
+]
+
+[tool.uv]
+managed = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 99
+src = ["data", "model", "export"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "RUF",  # Ruff-specific rules
+]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["data", "model", "export"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = ["epitran.*", "datasets.*", "onnxruntime.*", "onnx.*"]
+ignore_missing_imports = true

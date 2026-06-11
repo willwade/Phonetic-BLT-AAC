@@ -1,0 +1,26 @@
+model:
+  vocab_size: 260
+  max_sequence_length: 512
+
+  patcher:
+    num_layers: 3
+    num_heads: 4
+    hidden_dim: 128
+    entropy_threshold: 1.34
+
+  global_transformer:
+    num_layers: 12
+    num_heads: 8
+    hidden_dim: 512
+    dropout: 0.1
+
+  decoder:
+    num_layers: 2
+    hidden_dim: 128
+
+training:
+  batch_size: 8
+  lr: 1.0e-4
+  epochs: 10
+  data_path: data/phonemized.txt
+  checkpoint_dir: checkpoints
