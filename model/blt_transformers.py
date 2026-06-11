@@ -59,9 +59,13 @@ class MetaBLTWrapper:
         print("BLT Config loaded:")
         print(f"  Vocab size: {self.config.vocab_size}")
         print(f"  Max sequence length: {self.config.max_position_embeddings}")
-        print(f"  Number of layers: {self.config.num_hidden_layers}")
-        print(f"  Number of heads: {self.config.num_attention_heads}")
-        print(f"  Hidden size: {self.config.hidden_size}")
+        # Handle different config attributes between BLT versions
+        if hasattr(self.config, 'num_hidden_layers'):
+            print(f"  Number of layers: {self.config.num_hidden_layers}")
+        if hasattr(self.config, 'num_attention_heads'):
+            print(f"  Number of heads: {self.config.num_attention_heads}")
+        if hasattr(self.config, 'hidden_size'):
+            print(f"  Hidden size: {self.config.hidden_size}")
 
         # Load the full model
         self.model = BltForCausalLM.from_pretrained(

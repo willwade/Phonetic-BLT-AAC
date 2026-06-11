@@ -194,10 +194,15 @@ def main(config_path: str, resume_from: str | None = None):
         print("Model Type: Meta BLT (Pre-trained)")
         print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
         print(f"Vocabulary size: {model_info.vocab_size}")
-        print(f"Number of layers: {model_info.num_hidden_layers}")
-        print(f"Number of heads: {model_info.num_attention_heads}")
-        print(f"Hidden size: {model_info.hidden_size}")
-        print(f"Max sequence length: {model_info.max_position_embeddings}")
+        # Handle different config attributes between BLT versions
+        if hasattr(model_info, 'num_hidden_layers'):
+            print(f"Number of layers: {model_info.num_hidden_layers}")
+        if hasattr(model_info, 'num_attention_heads'):
+            print(f"Number of heads: {model_info.num_attention_heads}")
+        if hasattr(model_info, 'hidden_size'):
+            print(f"Hidden size: {model_info.hidden_size}")
+        if hasattr(model_info, 'max_position_embeddings'):
+            print(f"Max sequence length: {model_info.max_position_embeddings}")
 
     except Exception as e:
         raise RuntimeError(

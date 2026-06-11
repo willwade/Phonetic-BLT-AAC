@@ -1,0 +1,12 @@
+model:
+  vocab_size: 260  # Byte vocab + special tokens
+  max_sequence_length: 512
+
+training:
+  batch_size: 8
+  lr: 1.0e-4
+  epochs: 10
+  data_path: data/phonemized.txt
+  checkpoint_dir: checkpoints/meta_blt
+  grad_clip: 1.0
+  early_stopping_patience: 3
