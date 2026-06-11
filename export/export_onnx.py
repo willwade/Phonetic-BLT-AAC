@@ -1,66 +1,134 @@
-"""Export a trained Phonetic BLT checkpoint to quantized ONNX for Dasher C++ integration.
+"""Export a trained Meta BLT checkpoint to quantized ONNX for Dasher C++ integration.
 
 Usage:
     python export/export_onnx.py --checkpoint checkpoints/best.pt --output model.onnx
 """
 
 import argparse
+import tempfile
+
+import torch
+import torch.onnx
+
+from dotenv import load_dotenv
+from model.blt_transformers import MetaBLTWrapper
+
+# Load environment variables
+load_dotenv()
 
 
 def export_to_onnx(
-    pytorch_model_path: str, onnx_output_path: str, config_path: str | None = None
-) -> None:
-    """Load a trained model and export to ONNX with INT8 quantization.
+    checkpoint_path: str,
+    onnx_output_path: str = "model.onnx",
+    quantize: bool = True,
+    opset_version: int = 17,
+) -> str:
+    """Load a trained Meta BLT checkpoint and export to ONNX with optional INT8 quantization.
 
     Args:
-        pytorch_model_path: Path to the saved PyTorch state dict.
-        onnx_output_path: Destination path for the ONNX model.
-        config_path: Optional YAML config used during training.
-    """
-    print(f"Loading checkpoint from {pytorch_model_path}...")
+        checkpoint_path: Path to the saved PyTorch checkpoint (.pt file)
+        onnx_output_path: Destination path for the ONNX model
+        quantize: Whether to apply INT8 quantization
+        opset_version: ONNX opset version to use
 
-    # TODO: Load config and instantiate model properly once BLT arch is implemented
-    # For now this is a skeleton — actual model class needs to be imported
-    raise NotImplementedError(
-        "Wire up model instantiation from model.train.PhoneticBLT once architecture is finalized."
+    Returns:
+        Path to the exported ONNX model (quantized if quantize=True)
+    """
+    print(f"Loading checkpoint from {checkpoint_path}...")
+
+    # Load the Meta BLT model
+    blt_wrapper = MetaBLTWrapper()
+    model = blt_wrapper.load_model()
+
+    # Load the checkpoint
+    checkpoint = torch.load(checkpoint_path, map_location="cpu")
+    model.load_state_dict(checkpoint["model_state_dict"])
+    model.eval()
+
+    print("Model loaded successfully")
+
+    # Move model to CPU for export
+    model = model.cpu()
+
+    # Determine input shape from config or use defaults
+    config = checkpoint.get("config", {})
+    max_seq_len = config.get("model", {}).get("max_sequence_length", 512)
+    batch_size = 1  # Dasher needs single token prediction
+
+    print(f"Exporting with batch_size={batch_size}, max_seq_len={max_seq_len}")
+
+    # Create dummy input for export
+    dummy_input = torch.randint(0, 256, (batch_size, max_seq_len), dtype=torch.long)
+
+    # Export to ONNX
+    print("Exporting to ONNX...")
+    torch.onnx.export(
+        model,
+        dummy_input,
+        onnx_output_path,
+        export_params=True,
+        opset_version=opset_version,
+        do_constant_folding=True,
+        input_names=["input_bytes"],
+        output_names=["output_logits"],
+        dynamic_axes={
+            "input_bytes": {0: "batch_size", 1: "sequence_length"},
+            "output_logits": {0: "batch_size", 1: "sequence_length"},
+        },
     )
 
-    # The following is the target export flow:
+    print(f"Exported to: {onnx_output_path}")
 
-    # model = PhoneticBLT(config)
-    # model.load_state_dict(torch.load(pytorch_model_path, map_location="cpu"))
-    # model.eval()
+    # Verify the exported model
+    print("Verifying exported model...")
+    import onnx
+    onnx_model = onnx.load(onnx_output_path)
+    print(f"ONNX model loaded successfully")
+    print(f"Inputs: {[inp.name for inp in onnx_model.graph.input]}")
+    print(f"Outputs: {[out.name for out in onnx_model.graph.output]}")
 
-    # dummy_input = torch.randint(0, 256, (1, 64), dtype=torch.long)
-    # torch.onnx.export(
-    #     model,
-    #     dummy_input,
-    #     onnx_output_path,
-    #     export_params=True,
-    #     opset_version=17,
-    #     do_constant_folding=True,
-    #     input_names=["byte_history"],
-    #     output_names=["next_byte_logits"],
-    #     dynamic_axes={
-    #         "byte_history": {0: "batch_size", 1: "sequence_length"},
-    #         "next_byte_logits": {0: "batch_size", 1: "sequence_length"},
-    #     },
-    # )
+    if quantize:
+        print("\nApplying INT8 quantization...")
+        quantized_path = onnx_output_path.replace(".onnx", "_int8.onnx")
 
-    # print("Applying INT8 quantization...")
-    # quantized_path = onnx_output_path.replace(".onnx", "_int8.onnx")
-    # quantize_dynamic(
-    #     model_input=onnx_output_path,
-    #     model_output=quantized_path,
-    #     weight_type=QuantType.QUInt8,
-    # )
-    # print(f"Export complete: {quantized_path}")
+        try:
+            from onnxruntime.quantization import quantize_dynamic, QuantType
+
+            # Use dynamic quantization (works without calibration data)
+            quantize_dynamic(
+                model_input=onnx_output_path,
+                model_output=quantized_path,
+                weight_type=QuantType.QUInt8,
+            )
+            print(f"Quantized model saved to: {quantized_path}")
+
+            # Verify quantized model
+            quantized_onnx = onnx.load(quantized_path)
+            print("Quantized ONNX model loaded successfully")
+            return quantized_path
+
+        except ImportError:
+            print("Warning: onnxruntime not available, skipping quantization")
+            print("Install with: pip install onnxruntime")
+            return onnx_output_path
+    else:
+        print("Skipping quantization (quantize=False)")
+        return onnx_output_path
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Export BLT to ONNX")
+    parser = argparse.ArgumentParser(description="Export Meta BLT to ONNX")
     parser.add_argument("--checkpoint", type=str, required=True, help="Path to .pt checkpoint")
     parser.add_argument("--output", type=str, default="model.onnx", help="Output ONNX path")
-    parser.add_argument("--config", type=str, default=None, help="Training config YAML")
+    parser.add_argument("--no-quantize", action="store_true", help="Skip INT8 quantization")
+    parser.add_argument("--opset", type=int, default=17, help="ONNX opset version")
     args = parser.parse_args()
-    export_to_onnx(args.checkpoint, args.output, args.config)
+
+    exported_path = export_to_onnx(
+        checkpoint_path=args.checkpoint,
+        onnx_output_path=args.output,
+        quantize=not args.no_quantize,
+        opset_version=args.opset,
+    )
+
+    print(f"\nExport complete! Final model: {exported_path}")
