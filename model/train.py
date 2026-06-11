@@ -23,6 +23,7 @@ except ImportError:
     SummaryWriter = None  # type: ignore
 
 from model.dataset import PAD_TOKEN, VOCAB_SIZE, ByteSequenceDataset, collate_fn
+from model.blt_model import create_blt_model
 
 
 def load_config(path: str | Path) -> dict:
@@ -32,36 +33,25 @@ def load_config(path: str | Path) -> dict:
 
 
 class PhoneticBLT(nn.Module):
-    """Placeholder BLT architecture stub.
+    """Factory class to create BLT model based on configuration.
 
-    The full implementation should instantiate Meta's BLT layers:
-    - Entropy patcher (segments bytes into dynamic patches)
-    - Global latent transformer (cross-attention over patches)
-    - Local decoder (byte-level output)
-
-    See: https://github.com/facebookresearch/blt
+    This replaces the placeholder with the actual BLT implementation.
+    Uses either the full BLT or lightweight variant based on config.
     """
 
     def __init__(self, config: dict):
         super().__init__()
         self.config = config
-        model_cfg = config["model"]
 
-        # TODO: Replace with actual BLT architecture from facebookresearch/blt
-        # These are placeholder layers matching the config dimensions
-        hidden = model_cfg["global_transformer"]["hidden_dim"]
-        self.embed = nn.Embedding(VOCAB_SIZE, hidden)
-        self.transformer = nn.TransformerEncoder(
-            nn.TransformerEncoderLayer(
-                d_model=hidden,
-                nhead=model_cfg["global_transformer"]["num_heads"],
-                dim_feedforward=hidden * 4,
-                dropout=model_cfg["global_transformer"]["dropout"],
-                batch_first=True,
-            ),
-            num_layers=model_cfg["global_transformer"]["num_layers"],
-        )
-        self.head = nn.Linear(hidden, VOCAB_SIZE)
+        # Determine if we should use lightweight variant
+        use_lightweight = "debug" in str(config.get("config_path", "")) or \
+                         config.get("model", {}).get("global_transformer", {}).get("num_layers", 12) <= 2
+
+        # Create the actual BLT model
+        self.blt_model = create_blt_model(config, use_lightweight=use_lightweight)
+
+        # Store reference for compatibility
+        self.model_forward = self.blt_model.forward
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass: byte IDs → next-byte logits.
@@ -72,9 +62,14 @@ class PhoneticBLT(nn.Module):
         Returns:
             Logits of shape ``(batch, seq_len, vocab_size)``.
         """
-        h = self.embed(x)
-        h = self.transformer(h)
-        return self.head(h)
+        return self.model_forward(x)
+
+    def get_model_info(self) -> dict:
+        """Get model information for debugging."""
+        if hasattr(self.blt_model, 'get_model_info'):
+            return self.blt_model.get_model_info()
+        else:
+            return {"model_type": "BLT", "config": self.config}
 
 
 def train_one_epoch(
@@ -205,6 +200,8 @@ def validate(
 
 def main(config_path: str, resume_from: str | None = None):
     config = load_config(config_path)
+    config["config_path"] = config_path  # Store config path for model creation
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -216,7 +213,20 @@ def main(config_path: str, resume_from: str | None = None):
         print("Mixed precision disabled (CPU or CUDA unavailable)")
 
     model = PhoneticBLT(config).to(device)
-    print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+
+    # Print model information
+    if hasattr(model, 'get_model_info'):
+        model_info = model.get_model_info()
+        print(f"Model Type: {model_info.get('model_type', 'BLT')}")
+        print(f"Model parameters: {model_info.get('total_parameters', sum(p.numel() for p in model.parameters())):,}")
+        if 'patch_dim' in model_info:
+            print(f"Patch dimension: {model_info['patch_dim']}")
+        if 'global_transformer_layers' in model_info:
+            print(f"Transformer layers: {model_info['global_transformer_layers']}")
+        if 'entropy_threshold' in model_info:
+            print(f"Entropy threshold: {model_info['entropy_threshold']}")
+    else:
+        print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
 
     # Setup datasets
     train_cfg = config.get("training", {})

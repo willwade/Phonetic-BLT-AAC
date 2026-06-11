@@ -22,5 +22,5 @@ training:
   batch_size: 2  # Small batches for fast testing
   lr: 1.0e-3     # Higher learning rate for fast convergence
   epochs: 2      # Just 2 epochs for testing
-  data_path: data/phonemized.txt
+  data_path: data/phonemized_test.txt
   checkpoint_dir: checkpoints/debug
