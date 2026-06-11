@@ -10,6 +10,7 @@ Usage:
 import argparse
 import time
 from pathlib import Path
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -24,7 +25,7 @@ try:
     TENSORBOARD_AVAILABLE = True
 except ImportError:
     TENSORBOARD_AVAILABLE = False
-    SummaryWriter = None  # type: ignore
+    SummaryWriter = Any  # Fallback type
 
 # Load environment variables before importing model modules
 load_dotenv()
@@ -77,7 +78,8 @@ def train_one_epoch(
 
         if scaler is not None:
             with autocast():
-                logits = model(inputs)
+                outputs = model(inputs)
+                logits = outputs.logits if hasattr(outputs, 'logits') else outputs
                 mask = targets != PAD_TOKEN
                 loss = criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
                 loss = (loss * mask.view(-1).float()).sum() / mask.sum()
@@ -89,7 +91,8 @@ def train_one_epoch(
             scaler.step(optimizer)
             scaler.update()
         else:
-            logits = model(inputs)
+            outputs = model(inputs)
+            logits = outputs.logits if hasattr(outputs, 'logits') else outputs
             mask = targets != PAD_TOKEN
             loss = criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
             loss = (loss * mask.view(-1).float()).sum() / mask.sum()
@@ -147,7 +150,8 @@ def validate(
     with torch.no_grad():
         for inputs, targets in loader:
             inputs, targets = inputs.to(device), targets.to(device)
-            logits = model(inputs)
+            outputs = model(inputs)
+            logits = outputs.logits if hasattr(outputs, 'logits') else outputs
 
             mask = targets != PAD_TOKEN
             loss = criterion(logits.view(-1, logits.size(-1)), targets.view(-1))
@@ -190,7 +194,7 @@ def main(config_path: str, resume_from: str | None = None):
         model = blt_wrapper.load_model()
         model_info = blt_wrapper.get_config()
 
-        print("✅ Meta BLT model loaded successfully!")
+        print("Meta BLT model loaded successfully!")
         print("Model Type: Meta BLT (Pre-trained)")
         print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
         print(f"Vocabulary size: {model_info.vocab_size}")
@@ -332,7 +336,7 @@ def main(config_path: str, resume_from: str | None = None):
                 "best_perplexity": best_perplexity,
                 "config": config,
             }, save_path)
-            print(f"  [*] New best model saved (perplexity: {best_perplexity:.2f})")
+            print(f"  [NEW] New best model saved (perplexity: {best_perplexity:.2f})")
             patience_counter = 0
         else:
             patience_counter += 1
