@@ -21,22 +21,24 @@ git clone https://github.com/your-org/phonetic-blt-aac.git
 cd phonetic-blt-aac
 
 # Install all dependencies (uv creates .venv automatically)
-uv sync
-
-# Install PyTorch with CUDA nightly (if training on GPU)
-uv pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu121
+uv sync --extra dev
 
 # Download and filter AAC data
 uv run data/download.py --threshold 0.85
 
 # Phonemize to SAMPA
 uv run data/phonemize.py --input data/raw_conversations.txt --output data/phonemized.txt
+```
 
-# Train (requires GPU)
+### GPU training (optional)
+
+`uv sync` installs CPU-only PyTorch. For GPU training you **must** override:
+
+```bash
+uv pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu121
+uv run python -c "import torch; print(torch.cuda.is_available())"  # verify True
+
 uv run model/train.py --config model/blt_configs/low_resource.yaml
-
-# Export to ONNX
-uv run export/export_onnx.py --checkpoint checkpoints/best.pt --output model.onnx
 ```
 
 ### Linting
@@ -46,6 +48,13 @@ uv run ruff check          # lint
 uv run ruff format         # format
 uv run ruff check --fix    # auto-fix
 ```
+
+### What's not done yet
+
+The data pipeline (download, phonemize, dataset) is functional. The model
+architecture is a placeholder — see [TODO.md](TODO.md) for the full
+implementation guide including what to write, what tests to add, and known
+gotchas for each step.
 
 ## Repository Structure
 
