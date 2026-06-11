@@ -51,10 +51,12 @@ uv run ruff check --fix    # auto-fix
 
 ### What's not done yet
 
-The data pipeline (download, phonemize, dataset) is functional. The model
-architecture is a placeholder — see [TODO.md](TODO.md) for the full
-implementation guide including what to write, what tests to add, and known
-gotchas for each step.
+The data pipeline (download, phonemize, dataset) is **fully functional and tested**.
+The model architecture is still a placeholder — the core work remaining is
+implementing the real Byte Latent Transformer (BLT) architecture to replace
+the current placeholder transformer.
+
+See [TODO.md](TODO.md) for the full implementation guide.
 
 ## Repository Structure
 

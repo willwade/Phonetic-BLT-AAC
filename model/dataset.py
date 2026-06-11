@@ -30,8 +30,9 @@ class ByteSequenceDataset(Dataset):
     ):
         self.max_seq_len = max_seq_len
         self.stride = stride or max_seq_len // 2
+        self.data_path = Path(data_path)
 
-        raw = Path(data_path).read_text(encoding="utf-8")
+        raw = self.data_path.read_text(encoding="utf-8")
         lines = [line.strip() for line in raw.splitlines() if line.strip()]
 
         self.sequences: list[list[int]] = []
@@ -42,6 +43,86 @@ class ByteSequenceDataset(Dataset):
                 self.sequences.append(byte_seq)
 
         self.samples = self._build_samples()
+
+    def __repr__(self) -> str:
+        """Return string representation with dataset size and sequence count."""
+        return (f"ByteSequenceDataset(path={self.data_path.name}, "
+                f"sequences={len(self.sequences)}, samples={len(self.samples)}, "
+                f"max_seq_len={self.max_seq_len}, stride={self.stride})")
+
+    def subset(self, n: int, seed: int | None = None) -> "ByteSequenceDataset":
+        """Return a random subset of n samples for debugging.
+
+        Args:
+            n: Number of samples to include in the subset.
+            seed: Optional random seed for reproducibility.
+
+        Returns:
+            A new dataset instance with only n randomly selected samples.
+        """
+        import random
+
+        if seed is not None:
+            random.seed(seed)
+
+        # Create a new dataset instance with the same parameters
+        subset_dataset = ByteSequenceDataset(
+            data_path=self.data_path,
+            max_seq_len=self.max_seq_len,
+            stride=self.stride,
+        )
+
+        # Randomly select n samples
+        if n < len(self.samples):
+            subset_dataset.samples = random.sample(self.samples, n)
+        else:
+            subset_dataset.samples = self.samples.copy()
+
+        return subset_dataset
+
+    def verify_no_trivial_overlap(self) -> dict[str, int]:
+        """Verify that sliding window doesn't create trivially overlapping samples.
+
+        Check if adjacent samples have the same bytes appearing in both input
+        and target positions, which would indicate the stride is too small.
+
+        Returns:
+            Dict with overlap statistics: total_checks, overlaps_found, max_overlap_ratio
+        """
+        overlaps = 0
+        max_overlap = 0
+        total_checks = 0
+
+        for i in range(len(self.samples) - 1):
+            inp1, tgt1 = self.samples[i]
+            inp2, tgt2 = self.samples[i + 1]
+
+            # Check if target of sample 1 overlaps with input of sample 2
+            if len(tgt1) > 0 and len(inp2) > 0:
+                # Find the maximum overlap where tgt1 ending matches inp2 beginning
+                max_possible_overlap = min(len(tgt1), len(inp2))
+                current_overlap = 0
+
+                for k in range(1, max_possible_overlap + 1):
+                    if tgt1[-k:] == inp2[:k]:
+                        current_overlap = k
+                    else:
+                        break
+
+                if current_overlap > 0:
+                    overlaps += 1
+                    max_overlap = max(max_overlap, current_overlap)
+
+                total_checks += 1
+
+        overlap_ratio = max_overlap / self.max_seq_len if self.max_seq_len > 0 else 0
+
+        return {
+            "total_checks": total_checks,
+            "overlaps_found": overlaps,
+            "max_overlap_bytes": max_overlap,
+            "max_overlap_ratio": overlap_ratio,
+        }
 
     def _build_samples(self) -> list[tuple[list[int], list[int]]]:
         """Create sliding-window (input, target) pairs from all sequences."""

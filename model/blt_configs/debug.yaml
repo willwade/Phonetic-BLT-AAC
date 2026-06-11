@@ -1,0 +1,26 @@
+model:
+  vocab_size: 260
+  max_sequence_length: 64  # Very short for fast testing
+
+  patcher:
+    num_layers: 1  # Minimal layers
+    num_heads: 2   # Few heads
+    hidden_dim: 32  # Tiny hidden dimension
+    entropy_threshold: 1.34
+
+  global_transformer:
+    num_layers: 2  # Minimal transformer
+    num_heads: 2   # Few heads
+    hidden_dim: 64  # Small hidden dimension
+    dropout: 0.1
+
+  decoder:
+    num_layers: 1  # Minimal decoder
+    hidden_dim: 32  # Tiny hidden dimension
+
+training:
+  batch_size: 2  # Small batches for fast testing
+  lr: 1.0e-3     # Higher learning rate for fast convergence
+  epochs: 2      # Just 2 epochs for testing
+  data_path: data/phonemized.txt
+  checkpoint_dir: checkpoints/debug
