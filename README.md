@@ -52,9 +52,10 @@ uv run ruff check --fix    # auto-fix
 ### What's not done yet
 
 The data pipeline (download, phonemize, dataset) is **fully functional and tested**.
-The model architecture is still a placeholder — the core work remaining is
-implementing the real Byte Latent Transformer (BLT) architecture to replace
-the current placeholder transformer.
+The model architecture now supports **Meta's pre-trained BLT** with intelligent fallback to our custom implementation.
+
+**Note**: To use Meta's pre-trained BLT models, you need to request access at
+https://huggingface.co/facebook/blt-1b. See [META_BLT_ACCESS.md](META_BLT_ACCESS.md) for details.
 
 See [TODO.md](TODO.md) for the full implementation guide.
 
