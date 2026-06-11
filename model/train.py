@@ -332,7 +332,7 @@ def main(config_path: str, resume_from: str | None = None):
                 "best_perplexity": best_perplexity,
                 "config": config,
             }, save_path)
-            print(f"  ✅ New best model saved (perplexity: {best_perplexity:.2f})")
+            print(f"  [*] New best model saved (perplexity: {best_perplexity:.2f})")
             patience_counter = 0
         else:
             patience_counter += 1
