@@ -4,7 +4,7 @@ A phonetic language model for [Dasher](https://www.inference.org.uk/dasher/) bui
 
 ## What This Does
 
-Dasher is a predictive text entry system that lets users navigate language by steering through a probability landscape. This project trains a **phonetic** byte-level language model — meaning it predicts the next byte based on phonetic (SAMPA) representations of conversational speech — to improve prediction quality for AAC (Augmentative and Alternative Communication) users.
+ This project trains a **phonetic** byte-level language model — meaning it predicts the next byte based on phonetic (SAMPA) representations of conversational speech — to improve prediction quality for AAC (Augmentative and Alternative Communication) users.
 
 The pipeline:
 1. **Download** AAC-scored conversational data from Hugging Face
@@ -51,32 +51,10 @@ uv run ruff check --fix    # auto-fix
 
 ### Model Training
 
-The model architecture uses **Meta's pre-trained BLT models** for fine-tuning on phonetic byte sequences.
-
-**Note**: To use Meta's pre-trained BLT models, you need to request access at
-https://huggingface.co/facebook/blt-1b. See [META_BLT_ACCESS.md](META_BLT_ACCESS.md) for details.
 
 For cloud GPU training setup, see [CLOUD_SETUP.md](CLOUD_SETUP.md).
 
-See [TODO.md](TODO.md) for the full implementation guide.
 
-## Repository Structure
-
-```
-data/
-  download.py        Stream and filter Hugging Face EMNLP 2025 datasets
-  phonemize.py       Multithreaded G2P (Epitran) to 1-byte SAMPA
-  utils.py           Text cleaning, byte encoding, SampaPhonemizer
-model/
-  blt_configs/
-    low_resource.yaml   Compact BLT config for CPU/mobile deployment
-  blt_transformers.py   Meta BLT model loader and wrapper
-  train.py              Meta BLT fine-tuning loop with byte-level loss
-  dataset.py            PyTorch Dataset for byte-sequence training
-export/
-  export_onnx.py     Quantize and package BLT checkpoints to ONNX
-  benchmark.py       Latency and memory profiling
-```
 
 ## Key References
 
@@ -91,9 +69,6 @@ export/
 | Epitran G2P | [dmortensen/epitran](https://github.com/dmortensen/epitran) |
 | EMNLP 2025 AAC Project | [OSF ajm7t](https://osf.io/ajm7t/) |
 
-## Status
-
-This project is in early development. See [TODO.md](TODO.md) for the implementation roadmap.
 
 ## License
 
