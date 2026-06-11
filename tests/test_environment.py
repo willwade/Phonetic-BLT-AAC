@@ -3,7 +3,6 @@
 This validates that the environment is correctly set up with all required packages.
 """
 
-import pytest
 
 
 def test_torch_import():
@@ -50,12 +49,11 @@ def test_huggingface_hub_import():
 
 def test_all_core_imports():
     """Test that all core dependencies are available in the same environment."""
-    import torch
     import datasets
     import epitran
     import onnx
     import onnxruntime
-    import huggingface_hub
+    import torch
 
     # Verify basic functionality
     assert hasattr(torch, "nn")

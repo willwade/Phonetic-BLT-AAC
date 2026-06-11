@@ -94,8 +94,8 @@ class ByteSequenceDataset(Dataset):
         total_checks = 0
 
         for i in range(len(self.samples) - 1):
-            inp1, tgt1 = self.samples[i]
-            inp2, tgt2 = self.samples[i + 1]
+            _, tgt1 = self.samples[i]
+            inp2, _ = self.samples[i + 1]
 
             # Check if target of sample 1 overlaps with input of sample 2
             if len(tgt1) > 0 and len(inp2) > 0:

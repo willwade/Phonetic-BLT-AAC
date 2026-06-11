@@ -1,21 +1,23 @@
-"""BLT training loop for the phonetic byte-level language model.
+"""Meta BLT training loop for the phonetic byte-level language model.
+
+This version uses ONLY Meta's pre-trained BLT models from HuggingFace.
+Custom implementation has been removed to maintain a single, proven approach.
 
 Usage:
     python model/train.py --config model/blt_configs/low_resource.yaml
 """
 
 import argparse
-import os
 import time
 from pathlib import Path
 
 import torch
 import torch.nn as nn
 import yaml
-from torch.utils.data import DataLoader
+from dotenv import load_dotenv
 from torch.cuda.amp import GradScaler, autocast
 from torch.optim.lr_scheduler import CosineAnnealingLR
-from dotenv import load_dotenv
+from torch.utils.data import DataLoader
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -24,58 +26,17 @@ except ImportError:
     TENSORBOARD_AVAILABLE = False
     SummaryWriter = None  # type: ignore
 
-# Load environment variables
+# Load environment variables before importing model modules
 load_dotenv()
 
-from model.dataset import PAD_TOKEN, VOCAB_SIZE, ByteSequenceDataset, collate_fn
-from model.blt_model import create_blt_model
-from model.blt_transformers import setup_blt_model
+from model.blt_transformers import MetaBLTWrapper  # noqa: E402
+from model.dataset import PAD_TOKEN, ByteSequenceDataset, collate_fn  # noqa: E402
 
 
 def load_config(path: str | Path) -> dict:
     """Load a YAML training configuration."""
     with open(path) as f:
         return yaml.safe_load(f)
-
-
-class PhoneticBLT(nn.Module):
-    """Factory class to create BLT model based on configuration.
-
-    This replaces the placeholder with the actual BLT implementation.
-    Uses either the full BLT or lightweight variant based on config.
-    """
-
-    def __init__(self, config: dict):
-        super().__init__()
-        self.config = config
-
-        # Determine if we should use lightweight variant
-        use_lightweight = "debug" in str(config.get("config_path", "")) or \
-                         config.get("model", {}).get("global_transformer", {}).get("num_layers", 12) <= 2
-
-        # Create the actual BLT model
-        self.blt_model = create_blt_model(config, use_lightweight=use_lightweight)
-
-        # Store reference for compatibility
-        self.model_forward = self.blt_model.forward
-
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass: byte IDs → next-byte logits.
-
-        Args:
-            x: Token IDs of shape ``(batch, seq_len)``.
-
-        Returns:
-            Logits of shape ``(batch, seq_len, vocab_size)``.
-        """
-        return self.model_forward(x)
-
-    def get_model_info(self) -> dict:
-        """Get model information for debugging."""
-        if hasattr(self.blt_model, 'get_model_info'):
-            return self.blt_model.get_model_info()
-        else:
-            return {"model_type": "BLT", "config": self.config}
 
 
 def train_one_epoch(
@@ -218,28 +179,36 @@ def main(config_path: str, resume_from: str | None = None):
     else:
         print("Mixed precision disabled (CPU or CUDA unavailable)")
 
-    # Setup BLT model with intelligent fallback
-    print("Setting up BLT model...")
-    try:
-        model, model_info = setup_blt_model(config, prefer_meta=True)
-        print(f"Model Type: {model_info.get('model_type', 'BLT')}")
-        print(f"Model parameters: {model_info.get('total_parameters', sum(p.numel() for p in model.parameters())):,}")
+    # Setup Meta BLT model (requires approved access)
+    print("Setting up Meta BLT model...")
+    print("Note: Meta BLT models require approved HuggingFace access")
+    print("Request access at: https://huggingface.co/facebook/blt-1b")
 
-        # Print additional model info if available
-        if 'vocab_size' in model_info:
-            print(f"Vocabulary size: {model_info['vocab_size']}")
-        if 'num_layers' in model_info:
-            print(f"Number of layers: {model_info['num_layers']}")
-        if 'hidden_size' in model_info:
-            print(f"Hidden size: {model_info['hidden_size']}")
-        if 'max_sequence_length' in model_info:
-            print(f"Max sequence length: {model_info['max_sequence_length']}")
+    try:
+        # Try to load Meta's BLT-1B model
+        blt_wrapper = MetaBLTWrapper(model_name="facebook/blt-1b")
+        model = blt_wrapper.load_model()
+        model_info = blt_wrapper.get_config()
+
+        print("✅ Meta BLT model loaded successfully!")
+        print("Model Type: Meta BLT (Pre-trained)")
+        print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+        print(f"Vocabulary size: {model_info.vocab_size}")
+        print(f"Number of layers: {model_info.num_hidden_layers}")
+        print(f"Number of heads: {model_info.num_attention_heads}")
+        print(f"Hidden size: {model_info.hidden_size}")
+        print(f"Max sequence length: {model_info.max_position_embeddings}")
 
     except Exception as e:
-        print(f"Failed to load BLT model: {e}")
-        print("Falling back to placeholder model...")
-        model = PhoneticBLT(config)
-        print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+        raise RuntimeError(
+            f"Failed to load Meta BLT model: {e}\n\n"
+            f"Meta BLT models require approved HuggingFace access.\n"
+            f"Please:\n"
+            f"1. Request access at: https://huggingface.co/facebook/blt-1b\n"
+            f"2. Set HF_TOKEN in .env file once approved\n"
+            f"3. Training will work automatically with Meta's pre-trained BLT\n\n"
+            f"See META_BLT_ACCESS.md for detailed instructions."
+        ) from e
 
     model = model.to(device)
 
@@ -326,6 +295,7 @@ def main(config_path: str, resume_from: str | None = None):
             model, train_loader, optimizer, criterion, device,
             scaler=scaler, grad_clip=grad_clip, epoch=epoch, writer=writer
         )
+        print(f"  Training loss: {train_loss:.4f}")
 
         # Validation
         val_loss, val_perplexity = validate(model, val_loader, criterion, device)
@@ -387,7 +357,7 @@ def main(config_path: str, resume_from: str | None = None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Train Phonetic BLT")
+    parser = argparse.ArgumentParser(description="Train Meta BLT for Phonetic AAC")
     parser.add_argument(
         "--config",
         type=str,

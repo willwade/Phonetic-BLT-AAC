@@ -9,7 +9,7 @@ Dasher is a predictive text entry system that lets users navigate language by st
 The pipeline:
 1. **Download** AAC-scored conversational data from Hugging Face
 2. **Phonemize** text to 1-byte SAMPA using Epitran (parallel G2P)
-3. **Train** a compact BLT model on byte sequences
+3. **Fine-tune** Meta's pre-trained BLT model on byte sequences
 4. **Export** to quantized ONNX for real-time Dasher C++ integration
 
 ## Quick Start
@@ -52,7 +52,7 @@ uv run ruff check --fix    # auto-fix
 ### What's not done yet
 
 The data pipeline (download, phonemize, dataset) is **fully functional and tested**.
-The model architecture now supports **Meta's pre-trained BLT** with intelligent fallback to our custom implementation.
+The model architecture uses **Meta's pre-trained BLT models exclusively** for proven performance.
 
 **Note**: To use Meta's pre-trained BLT models, you need to request access at
 https://huggingface.co/facebook/blt-1b. See [META_BLT_ACCESS.md](META_BLT_ACCESS.md) for details.
@@ -69,8 +69,9 @@ data/
 model/
   blt_configs/
     low_resource.yaml   Compact BLT config for CPU/mobile deployment
-  train.py             BLT training loop with custom byte loss
-  dataset.py           PyTorch Dataset for byte-sequence training
+  blt_transformers.py   Meta BLT model loader and wrapper
+  train.py              Meta BLT fine-tuning loop with byte-level loss
+  dataset.py            PyTorch Dataset for byte-sequence training
 export/
   export_onnx.py     Quantize and package BLT checkpoints to ONNX
   benchmark.py       Latency and memory profiling

@@ -32,7 +32,7 @@ class SampaPhonemizer:
                 # Non-ASCII result - might be IPA instead of SAMPA
                 pass
             return result
-        except ValueError as e:
+        except ValueError:
             # Known issues: unusual Unicode characters, emojis, etc.
             return ""
         except AttributeError:

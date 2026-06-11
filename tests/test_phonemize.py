@@ -3,8 +3,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
-
 
 class TestSampaPhonemizer:
     """Test the SampaPhonemizer class."""
@@ -111,7 +109,7 @@ class TestByteEncoding:
         from data.utils import text_to_bytes
 
         result = text_to_bytes("hello")
-        expected = list("hello".encode("utf-8"))
+        expected = list(b"hello")
         assert result == expected
 
     def test_text_to_bytes_unicode(self):
@@ -119,7 +117,7 @@ class TestByteEncoding:
         from data.utils import text_to_bytes
 
         result = text_to_bytes("café")
-        expected = list("café".encode("utf-8"))
+        expected = list("café".encode())
         assert result == expected
 
     def test_text_to_bytes_empty(self):
@@ -131,7 +129,7 @@ class TestByteEncoding:
 
     def test_bytes_to_text_roundtrip(self):
         """Test bytes_to_text(text_to_bytes(s)) == s roundtrip."""
-        from data.utils import text_to_bytes, bytes_to_text
+        from data.utils import bytes_to_text, text_to_bytes
 
         original = "hello world café"
         byte_values = text_to_bytes(original)
@@ -237,8 +235,9 @@ class TestParallelPhonemize:
 
     def test_parallel_phonemize_creates_directory(self):
         """Test that phonemization creates output directory if needed."""
-        from data.phonemize import parallel_phonemize
         import tempfile
+
+        from data.phonemize import parallel_phonemize
 
         # Create temporary input file
         with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt", encoding="utf-8") as inp:

@@ -3,7 +3,6 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 import torch
 
 from model.dataset import ByteSequenceDataset

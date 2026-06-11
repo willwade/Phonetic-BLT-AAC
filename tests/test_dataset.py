@@ -3,10 +3,9 @@
 import tempfile
 from pathlib import Path
 
-import pytest
 import torch
 
-from model.dataset import ByteSequenceDataset, PAD_TOKEN, EOS_TOKEN, VOCAB_SIZE, collate_fn
+from model.dataset import EOS_TOKEN, PAD_TOKEN, VOCAB_SIZE, ByteSequenceDataset, collate_fn
 
 
 class TestByteSequenceDataset:
@@ -267,7 +266,7 @@ class TestSpecialTokens:
 
     def test_vocab_size_accommodates_special_tokens(self):
         """Test that VOCAB_SIZE accommodates byte range + special tokens."""
-        assert VOCAB_SIZE > max(PAD_TOKEN, EOS_TOKEN)
+        assert max(PAD_TOKEN, EOS_TOKEN) < VOCAB_SIZE
 
     def test_eos_token_added_to_sequences(self):
         """Test that EOS_TOKEN is added to sequences."""
@@ -302,7 +301,7 @@ class TestDatasetIntegration:
 
             # Should be able to iterate
             batch_count = 0
-            for inputs, targets in dataloader:
+            for inputs, _targets in dataloader:
                 assert inputs.shape[0] <= 2  # Batch size
                 assert inputs.shape[1] <= 20  # Max seq len
                 batch_count += 1
@@ -325,7 +324,7 @@ class TestDatasetIntegration:
             dataset = ByteSequenceDataset(data_path, max_seq_len=10)
             # Check that no target values are PAD_TOKEN in the original samples
             for i in range(len(dataset)):
-                inp, tgt = dataset[i]
+                _inp, _tgt = dataset[i]
                 # Note: targets from actual data shouldn't contain PAD_TOKEN
                 # (only padded targets from collate_fn will)
                 pass  # This is more about documenting expected behavior
