@@ -1,12 +1,16 @@
 model:
-  vocab_size: 260  # Byte vocab + special tokens
+  vocab_size: 260
   max_sequence_length: 512
 
 training:
-  batch_size: 8  # For GPU with 16GB+ VRAM
+  batch_size: 8
   lr: 1.0e-4
   epochs: 10
-  data_path: data/phonemized.txt  # Upload your phonemized training data
+  data_path: data/phonemized.txt
   checkpoint_dir: checkpoints/meta_blt
   grad_clip: 1.0
   early_stopping_patience: 3
+
+# Set to your HF repo to auto-upload checkpoints on each improvement.
+# Also requires HF_TOKEN env variable to be set.
+hub_repo: willwade/phonetic-blt-aac
