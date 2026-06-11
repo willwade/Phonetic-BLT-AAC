@@ -49,13 +49,14 @@ uv run ruff format         # format
 uv run ruff check --fix    # auto-fix
 ```
 
-### What's not done yet
+### Model Training
 
-The data pipeline (download, phonemize, dataset) is **fully functional and tested**.
-The model architecture uses **Meta's pre-trained BLT models exclusively** for proven performance.
+The model architecture uses **Meta's pre-trained BLT models** for fine-tuning on phonetic byte sequences.
 
 **Note**: To use Meta's pre-trained BLT models, you need to request access at
 https://huggingface.co/facebook/blt-1b. See [META_BLT_ACCESS.md](META_BLT_ACCESS.md) for details.
+
+For cloud GPU training setup, see [CLOUD_SETUP.md](CLOUD_SETUP.md).
 
 See [TODO.md](TODO.md) for the full implementation guide.
 
