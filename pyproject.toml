@@ -18,6 +18,8 @@ dependencies = [
     "onnx>=1.16.0",
     "onnxruntime>=1.17.0",
     "tqdm>=4.66.0",
+    "transformers>=4.46.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [project.optional-dependencies]

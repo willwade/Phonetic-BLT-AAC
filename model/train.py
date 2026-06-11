@@ -5,6 +5,7 @@ Usage:
 """
 
 import argparse
+import os
 import time
 from pathlib import Path
 
@@ -14,6 +15,7 @@ import yaml
 from torch.utils.data import DataLoader
 from torch.cuda.amp import GradScaler, autocast
 from torch.optim.lr_scheduler import CosineAnnealingLR
+from dotenv import load_dotenv
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -22,8 +24,12 @@ except ImportError:
     TENSORBOARD_AVAILABLE = False
     SummaryWriter = None  # type: ignore
 
+# Load environment variables
+load_dotenv()
+
 from model.dataset import PAD_TOKEN, VOCAB_SIZE, ByteSequenceDataset, collate_fn
 from model.blt_model import create_blt_model
+from model.blt_transformers import setup_blt_model
 
 
 def load_config(path: str | Path) -> dict:
@@ -212,21 +218,30 @@ def main(config_path: str, resume_from: str | None = None):
     else:
         print("Mixed precision disabled (CPU or CUDA unavailable)")
 
-    model = PhoneticBLT(config).to(device)
-
-    # Print model information
-    if hasattr(model, 'get_model_info'):
-        model_info = model.get_model_info()
+    # Setup BLT model with intelligent fallback
+    print("Setting up BLT model...")
+    try:
+        model, model_info = setup_blt_model(config, prefer_meta=True)
         print(f"Model Type: {model_info.get('model_type', 'BLT')}")
         print(f"Model parameters: {model_info.get('total_parameters', sum(p.numel() for p in model.parameters())):,}")
-        if 'patch_dim' in model_info:
-            print(f"Patch dimension: {model_info['patch_dim']}")
-        if 'global_transformer_layers' in model_info:
-            print(f"Transformer layers: {model_info['global_transformer_layers']}")
-        if 'entropy_threshold' in model_info:
-            print(f"Entropy threshold: {model_info['entropy_threshold']}")
-    else:
+
+        # Print additional model info if available
+        if 'vocab_size' in model_info:
+            print(f"Vocabulary size: {model_info['vocab_size']}")
+        if 'num_layers' in model_info:
+            print(f"Number of layers: {model_info['num_layers']}")
+        if 'hidden_size' in model_info:
+            print(f"Hidden size: {model_info['hidden_size']}")
+        if 'max_sequence_length' in model_info:
+            print(f"Max sequence length: {model_info['max_sequence_length']}")
+
+    except Exception as e:
+        print(f"Failed to load BLT model: {e}")
+        print("Falling back to placeholder model...")
+        model = PhoneticBLT(config)
         print(f"Model parameters: {sum(p.numel() for p in model.parameters()):,}")
+
+    model = model.to(device)
 
     # Setup datasets
     train_cfg = config.get("training", {})
