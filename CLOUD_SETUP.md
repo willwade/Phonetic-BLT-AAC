@@ -1,14 +1,8 @@
 # Cloud GPU Training Setup
 
-This directory contains scripts for setting up Meta BLT training on cloud GPU instances.
+This directory contains scripts for setting up Meta BLT training on a big fat machine. 
 
 ## Quick Start
-
-1. **Choose a cloud provider** (AWS, Google Cloud, Azure, etc.)
-   - Select a GPU instance with ≥16GB VRAM (recommend 24GB+)
-   - Examples: AWS p3.2xlarge (V100), Google Cloud n1-standard-4 with V100
-
-2. **Rent the instance and SSH in**
 
 3. **Clone the repository:**
    ```bash
@@ -76,11 +70,3 @@ watch -n 1 nvidia-smi
 
 **Data Issues**: Verify `data/phonemized.txt` exists and contains phonemized text
 
-## Cost Estimates
-
-Typical cloud GPU costs (as of 2025):
-- **AWS p3.2xlarge** (V100 16GB): ~$3-4/hour
-- **Google Cloud V100**: ~$2-3/hour
-- **AWS p3.8xlarge** (4x V100 64GB): ~$12/hour
-
-For 10 epochs on full dataset, estimate 4-8 hours depending on dataset size.

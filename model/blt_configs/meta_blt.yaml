@@ -3,10 +3,10 @@ model:
   max_sequence_length: 512
 
 training:
-  batch_size: 8
+  batch_size: 8  # For GPU with 16GB+ VRAM
   lr: 1.0e-4
   epochs: 10
-  data_path: data/phonemized.txt  # Change to your full dataset path
+  data_path: data/phonemized.txt  # Upload your phonemized training data
   checkpoint_dir: checkpoints/meta_blt
   grad_clip: 1.0
   early_stopping_patience: 3
