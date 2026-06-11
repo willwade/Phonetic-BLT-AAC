@@ -73,7 +73,7 @@ class MetaBLTWrapper:
             token=self.use_auth_token
         )
 
-        print("✅ Meta BLT model loaded successfully!")
+        print("Meta BLT model loaded successfully!")
         print(f"Model parameters: {sum(p.numel() for p in self.model.parameters()):,}")
 
         return self.model
