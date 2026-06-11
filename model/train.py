@@ -277,6 +277,11 @@ def main(config_path: str, resume_from: str | None = None):
         writer = SummaryWriter(log_dir)
         print(f"TensorBoard logs: {log_dir}")
 
+    # Training monitor
+    from model.monitor import TrainingMonitor, get_gpu_memory
+    monitor = TrainingMonitor(log_dir if TENSORBOARD_AVAILABLE else Path("logs"))
+    print("Training monitor initialized")
+
     # Checkpoint resumption
     start_epoch = 1
     best_perplexity = float("inf")
@@ -320,6 +325,18 @@ def main(config_path: str, resume_from: str | None = None):
             writer.add_scalar("Loss/validation", val_loss, epoch)
             writer.add_scalar("Perplexity/validation", val_perplexity, epoch)
 
+        # Training monitoring
+        gpu_memory = get_gpu_memory()
+        monitor.log_metrics(
+            epoch=epoch,
+            step=epoch * len(train_loader),
+            loss=train_loss,
+            perplexity=val_perplexity,
+            learning_rate=optimizer.param_groups[0]["lr"],
+            gpu_memory=gpu_memory,
+            phase="validation"
+        )
+
         # Checkpoint saving
         save_dir = Path(train_cfg.get("checkpoint_dir", "checkpoints"))
         save_dir.mkdir(parents=True, exist_ok=True)
@@ -337,6 +354,14 @@ def main(config_path: str, resume_from: str | None = None):
                 "config": config,
             }, save_path)
             print(f"  [NEW] New best model saved (perplexity: {best_perplexity:.2f})")
+
+            # Log checkpoint info
+            monitor.save_checkpoint_info(
+                epoch=epoch,
+                checkpoint_path=save_path,
+                perplexity=best_perplexity,
+                checkpoint_type="best"
+            )
             patience_counter = 0
         else:
             patience_counter += 1

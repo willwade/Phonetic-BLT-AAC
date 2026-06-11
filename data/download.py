@@ -1,11 +1,13 @@
-"""Download and filter EMNLP 2025 AAC-scored conversational datasets from Hugging Face."""
+"""Download AAC-scored conversational data from Hugging Face."""
 
 import argparse
 import hashlib
+import time
 from pathlib import Path
 
 from datasets import load_dataset
 from tqdm import tqdm
+
 
 DATASET_SOURCES = {
     "c4": "figmtu/aac_c4_deberta_classified",  # 4.35B tokens
@@ -14,21 +16,26 @@ DATASET_SOURCES = {
 }
 
 
-def download_and_filter(
+def download_aac_data(
     score_threshold: float = 0.85,
     output_path: str = "data/raw_conversations.txt",
     source: str = "c4",
     resume: bool = True,
     deduplicate: bool = True,
+    max_rows: int | None = None,
 ):
-    """Stream the DeBERTa-classified AAC dataset and keep high-confidence lines.
+    """Download AAC-scored conversational data from HuggingFace.
 
     Args:
-        score_threshold: Minimum DeBERTa AAC score to keep a row.
-        output_path: Path to write filtered lines.
-        source: Dataset source - one of 'c4', 'subtitles', 'c4-fast'
+        score_threshold: Minimum DeBERTa AAC score (0-1)
+        output_path: Where to save the filtered text
+        source: Dataset source to download
         resume: If True and output_path exists, skip lines already written
         deduplicate: If True, skip exact duplicate lines using SHA-256
+        max_rows: Optional limit on number of rows to download (for testing)
+
+    Returns:
+        Number of lines written to output file
     """
     if source not in DATASET_SOURCES:
         raise ValueError(f"Invalid source: {source}. Must be one of {list(DATASET_SOURCES.keys())}")
@@ -58,31 +65,42 @@ def download_and_filter(
         duplicates = 0
         total_scanned = 0
 
-        with tqdm(desc="Processing", unit="lines") as pbar:
-            for row in dataset:
-                total_scanned += 1
+        pbar = tqdm(desc="Processing", unit="lines")
+        for example in dataset:
+            total_scanned += 1
 
-                if row.get("aac_score", 0.0) >= score_threshold:
-                    clean_text = row["text"].strip().replace("\n", " ")
+            if max_rows and total_scanned > max_rows:
+                print(f"Reached max_rows limit ({max_rows}), stopping download.")
+                break
 
-                    # Check for duplicates
-                    if deduplicate:
-                        text_hash = hashlib.sha256(clean_text.encode()).hexdigest()
-                        if text_hash in seen_hashes:
-                            duplicates += 1
-                            continue
-                        seen_hashes.add(text_hash)
+            text = example.get("text", "").strip()
 
-                    f.write(clean_text + "\n")
-                    count += 1
+            if not text:
+                continue
 
-                    if count % 50000 == 0:
-                        pbar.set_postfix({"kept": count, "scanned": total_scanned, "dups": duplicates})
+            # Use dialogue_prob as the AAC score
+            score = example.get("dialogue_prob", 0.0)
+            if score < score_threshold:
+                continue
 
-                pbar.update(1)
+
+            # Check for duplicates
+            if deduplicate:
+                text_hash = hashlib.sha256(text.encode()).hexdigest()
+                if text_hash in seen_hashes:
+                    duplicates += 1
+                    continue
+                seen_hashes.add(text_hash)
+
+            f.write(text + "\n")
+            count += 1
+            pbar.set_postfix({"kept": count, "scanned": total_scanned, "dups": duplicates})
+
+            pbar.update(1)
 
     print(f"Done. {count} lines written to {output_path}.")
     print(f"Scanned {total_scanned} total lines, skipped {duplicates} duplicates.")
+    return count
 
 
 if __name__ == "__main__":
@@ -98,22 +116,17 @@ if __name__ == "__main__":
         choices=list(DATASET_SOURCES.keys()),
         help="Dataset source to download",
     )
-    parser.add_argument(
-        "--no-resume",
-        action="store_true",
-        help="Don't resume if output file exists (overwrite instead)",
-    )
-    parser.add_argument(
-        "--no-deduplicate",
-        action="store_true",
-        help="Don't deduplicate lines (keep all lines even if exact duplicates)",
-    )
+    parser.add_argument("--no-resume", action="store_true", help="Don't resume from existing file")
+    parser.add_argument("--no-deduplicate", action="store_true", help="Don't remove duplicates")
+    parser.add_argument("--max-rows", type=int, help="Maximum rows to download (for testing)")
+
     args = parser.parse_args()
 
-    download_and_filter(
+    download_aac_data(
         score_threshold=args.threshold,
         output_path=args.output,
         source=args.source,
         resume=not args.no_resume,
         deduplicate=not args.no_deduplicate,
+        max_rows=args.max_rows,
     )
